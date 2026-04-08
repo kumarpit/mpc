@@ -1,59 +1,40 @@
+import argparse
 import numpy as np
 import cvxpy as cp
+from level import load_level
 from visualization.viz import visualize
 
 ################################################################
-# Problem Parameters
+# CLI
 ################################################################
-
-dt = 0.15
-N  = 21           # total steps (3.0 s)
-H  = 10            # fixed MPC prediction horizon
-g  = np.array([0.0, 0.0, -9.8])
-
-r0     = np.array([0.0,  0.0,  2.0])
-v0     = np.array([3.0,  0.0,  4.5])
-r_goal = np.array([7.0, 10.0,  1.5])
-
-ALPHA_MAX = 80.0
+parser = argparse.ArgumentParser(description='Paper-toss MPC solver')
+parser.add_argument('level', help='Path to a level TOML file (e.g. levels/level1.toml)')
+args = parser.parse_args()
 
 ################################################################
-# Level Design
-# TODO: make a simple DSL for this
+# Load level
 ################################################################
-class Fan:
-    def __init__(self, bounds, direction, color, name):
-        self.bounds    = np.array(bounds, dtype=float)
-        d              = np.array(direction, dtype=float)
-        self.direction = d / np.linalg.norm(d)
-        self.color     = color
-        self.name      = name
+lv = load_level(args.level)
 
-    def contains(self, r):
-        return all(self.bounds[i, 0] <= r[i] <= self.bounds[i, 1] for i in range(3))
+N         = lv.N
+H         = lv.H
+dt        = lv.dt
+ALPHA_MAX = lv.ALPHA_MAX
+r0        = lv.r0
+v0        = lv.v0
+r_goal    = lv.r_goal
+fans      = lv.fans
+N_FANS    = len(fans)
 
-ZL, ZH = -5.0, 15.0
-
-fans = [
-    Fan([[-0.5, 2.5], [-0.5, 3.5], [ZL, ZH]], [ 0.0,  1.0,  1.0], '#2E86AB', 'Fan 0 (+y+z)'),
-    Fan([[ 2.5, 5.0], [-0.5, 3.5], [ZL, ZH]], [ 0.0,  1.0,  0.8], '#E8834C', 'Fan 1 (+y+z)'),
-    Fan([[ 5.0, 8.5], [-0.5, 3.5], [ZL, ZH]], [ 0.0,  1.0,  0.4], '#F5C542', 'Fan 2 (+y+z)'),
-    Fan([[-0.5, 2.5], [ 3.5, 7.0], [ZL, ZH]], [ 0.0,  1.0,  0.4], '#3EC47A', 'Fan 3 (+y+z)'),
-    Fan([[ 2.5, 5.0], [ 3.5, 7.0], [ZL, ZH]], [ 0.0,  1.0,  0.0], '#9B59B6', 'Fan 4 (+y)'),
-    Fan([[ 5.0, 8.5], [ 3.5, 7.0], [ZL, ZH]], [ 0.0,  1.0, -0.5], '#E84C7B', 'Fan 5 (+y−z)'),
-    Fan([[-0.5, 2.5], [ 7.0,11.5], [ZL, ZH]], [ 1.0,  0.5, -0.3], '#1ABC9C', 'Fan 6 (+x+y−z)'),
-    Fan([[ 2.5, 5.0], [ 7.0,11.5], [ZL, ZH]], [ 1.0,  0.2, -1.0], '#E67E22', 'Fan 7 (+x−z)'),
-    Fan([[ 5.0, 8.5], [ 7.0,11.5], [ZL, ZH]], [ 0.0, -0.3, -1.0], '#C0392B', 'Fan 8 (−y−z)'),
-]
-N_FANS = len(fans)
+g = np.array([0.0, 0.0, -9.8])
 
 ################################################################
-# Utils 
+# Utils
 ################################################################
 
-# returns the list of positions for `steps`time steps, representing the path taken via free 
+# returns the list of positions for `steps` time steps, representing the path taken via free
 # flight given the initial position r0 and initial velocity v0
-def simulate_free_flight(r0, v0, steps=N):
+def simulate_free_flight(r0, v0, steps):
     r = np.zeros((steps, 3))
     v = np.zeros((steps, 3))
     r[0], v[0] = r0, v0
@@ -62,13 +43,13 @@ def simulate_free_flight(r0, v0, steps=N):
         v[k+1] = v[k] + g * dt
     return r
 
-r_free = simulate_free_flight(r0, v0)
+r_free = simulate_free_flight(r0, v0, N)
 
 ################################################################
-# Main MPC Loop 
+# Main MPC Loop
 ################################################################
 
-# to kick things, we start by guessing our trajectory to be the straight line between the start 
+# to kick things, we start by guessing our trajectory to be the straight line between the start
 # position and the end goal position
 r_pred = np.linspace(r0, r_goal, N)
 
@@ -79,7 +60,7 @@ active_log = []
 pred_trajs = []
 
 print(f"MPC  fixed horizon H={H}  (N={N}, dt={dt}s, T={(N-1)*dt:.1f}s)")
-print(f"  {'k':>3}  {'horizon':>7}  {'planned err':>13}  {'actual err':>12}  {'status'}")
+print(f"  {'k':>3}  {'horizon':>7}  {'actual err':>12}  {'status'}")
 print("  " + "─" * 56)
 
 for k in range(N - 1):
@@ -96,11 +77,11 @@ for k in range(N - 1):
             if fan.contains(r_check):
                 active[j, i] = 1.0
 
-    # now that we know which fans are active for each time step in this horizon, we can setup our problem 
+    # now that we know which fans are active for each time step in this horizon, we can setup our problem
     # for the current iteration
     r_var     = cp.Variable((horizon, 3))
     v_var     = cp.Variable((horizon, 3))
-    alpha_var = cp.Variable((horizon - 1, N_FANS), nonneg=True)
+    alpha_var = cp.Variable((horizon - 1, N_FANS))
 
     # constraints!
     cons = [r_var[0] == r_k, v_var[0] == v_k]
@@ -145,9 +126,8 @@ for k in range(N - 1):
     r_actual.append(r_next)
     v_actual.append(v_next)
 
-    planned_err = float(np.linalg.norm(r_var.value[-1] - r_goal))
-    actual_err  = float(np.linalg.norm(r_next - r_goal))
-    print(f"  {k:>3}  {horizon:>7}  {planned_err:>13.4f}  {actual_err:>12.4f}  {status}")
+    err = float(np.linalg.norm(r_next - r_goal))
+    print(f"  {k:>3}  {horizon:>7}  {err:>12.4f}  {status}")
 
 r_actual   = np.array(r_actual)
 alpha_log  = np.array(alpha_log)

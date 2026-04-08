@@ -1,0 +1,68 @@
+[params]
+N         = 21
+H         = 10
+dt        = 0.15
+alpha_max = 80.0
+
+[start]
+r0    = [0.0,  0.0,  2.0]
+v0    = [3.0,  0.0,  4.5]
+r_goal = [7.0, 10.0,  1.5]
+
+# Each [[fans]] entry defines one fan zone.
+# bounds = [[x_min, x_max], [y_min, y_max], [z_min, z_max]]
+# direction is auto-normalised by the loader.
+
+[[fans]]
+bounds    = [[-0.5, 2.5], [-0.5, 3.5], [-5.0, 15.0]]
+direction = [0.0, 1.0, 1.0]
+color     = "#2E86AB"
+name      = "Fan 0 (+y+z)"
+
+[[fans]]
+bounds    = [[2.5, 5.0], [-0.5, 3.5], [-5.0, 15.0]]
+direction = [0.0, 1.0, 0.8]
+color     = "#E8834C"
+name      = "Fan 1 (+y+z)"
+
+[[fans]]
+bounds    = [[5.0, 8.5], [-0.5, 3.5], [-5.0, 15.0]]
+direction = [0.0, 1.0, 0.4]
+color     = "#F5C542"
+name      = "Fan 2 (+y+z)"
+
+[[fans]]
+bounds    = [[-0.5, 2.5], [3.5, 7.0], [-5.0, 15.0]]
+direction = [0.0, 1.0, 0.4]
+color     = "#3EC47A"
+name      = "Fan 3 (+y+z)"
+
+[[fans]]
+bounds    = [[2.5, 5.0], [3.5, 7.0], [-5.0, 15.0]]
+direction = [0.0, 1.0, 0.0]
+color     = "#9B59B6"
+name      = "Fan 4 (+y)"
+
+[[fans]]
+bounds    = [[5.0, 8.5], [3.5, 7.0], [-5.0, 15.0]]
+direction = [0.0, 1.0, -0.5]
+color     = "#E84C7B"
+name      = "Fan 5 (+y-z)"
+
+[[fans]]
+bounds    = [[-0.5, 2.5], [7.0, 11.5], [-5.0, 15.0]]
+direction = [1.0, 0.5, -0.3]
+color     = "#1ABC9C"
+name      = "Fan 6 (+x+y-z)"
+
+[[fans]]
+bounds    = [[2.5, 5.0], [7.0, 11.5], [-5.0, 15.0]]
+direction = [1.0, 0.2, -1.0]
+color     = "#E67E22"
+name      = "Fan 7 (+x-z)"
+
+[[fans]]
+bounds    = [[5.0, 8.5], [7.0, 11.5], [-5.0, 15.0]]
+direction = [0.0, -0.3, -1.0]
+color     = "#C0392B"
+name      = "Fan 8 (-y-z)"
