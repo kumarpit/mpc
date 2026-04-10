@@ -39,7 +39,7 @@ def simulate_free_flight(r0, v0, steps):
     v = np.zeros((steps, 3))
     r[0], v[0] = r0, v0
     for k in range(steps - 1):
-        r[k+1] = r[k] + v[k] * dt
+        r[k+1] = r[k] + v[k] * dt + 0.5 * g * dt ** 2
         v[k+1] = v[k] + g * dt
     return r
 
@@ -92,7 +92,8 @@ for k in range(N - 1):
         cons += [
             r_var[j + 1] == r_var[j] + v_var[j] * dt + 0.5 * acc_j * dt ** 2,
             v_var[j + 1] == v_var[j] + acc_j * dt,
-            alpha_var[j] <= ALPHA_MAX,
+            alpha_var[j] <=  ALPHA_MAX,
+            alpha_var[j] >= -ALPHA_MAX,
         ]
 
     # objective; minimize the distance between the ball and the end goal at the end of the current trajectory
@@ -139,4 +140,4 @@ print(f"\nActual terminal error: {final_err:.4f} m")
 # Visualization!
 ################################################################
 visualize(fans, r_free, r_actual, alpha_log, active_log, pred_trajs,
-          final_err, H, N, dt, ALPHA_MAX, r0, r_goal)
+          final_err, H, N, dt, ALPHA_MAX, r0, v0, r_goal)

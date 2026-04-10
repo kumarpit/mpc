@@ -1,0 +1,28 @@
+# Level 2 — two disjoint fan zones.
+#
+# The ball passes through Fan A (low-y region) which pushes it upward and
+# forward, then through Fan B (high-y region) which nudges it downward
+# toward the goal.  There is a gap between y=4 and y=5 where no fan acts.
+
+[params]
+N         = 50 
+H         = 10
+dt        = 0.08
+alpha_max = 80.0
+
+[start]
+r0 = [4.0, 9.0, 1.5]
+v0     = [2.0, 5.0, 2.0]
+r_goal     = [0.0, 0.0, 3.0]
+
+[[fans]]
+bounds    = [[-1.0, 6.0], [-1.0, 4.0], [-2.0, 8.0]]
+direction = [0.0, 1.0, 0.4]
+color     = "#2E86AB"
+name      = "Fan A"
+
+[[fans]]
+bounds    = [[-1.0, 6.0], [5.0, 12.0], [-2.0, 8.0]]
+direction = [0.2, 0.6, -1.0]
+color     = "#E8834C"
+name      = "Fan B"

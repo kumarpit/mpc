@@ -1,0 +1,35 @@
+# Extreme case 2: goal is far above the start — solver must fight gravity.
+#
+# In free flight the ball rises briefly then falls.  The goal is placed high
+# enough that gravity alone makes it completely unreachable; sustained upward
+# thrust from Fan Z is required throughout the flight.  Demonstrates that
+# the solver can continuously counteract gravity and still steer laterally.
+
+[params]
+N         = 25
+H         = 12
+dt        = 0.10
+alpha_max = 80.0
+
+[start]
+r0     = [0.0, 0.0,  0.0]
+v0     = [0.0, 0.0,  -15.0]
+r_goal = [3.0, 3.0, 18.0]
+
+[[fans]]
+bounds    = [[-100.0, 100.0], [-100.0, 100.0], [-100.0, 100.0]]
+direction = [1.0, 0.0, 0.0]
+color     = "#E74C3C"
+name      = "Fan X"
+
+[[fans]]
+bounds    = [[-100.0, 100.0], [-100.0, 100.0], [-100.0, 100.0]]
+direction = [0.0, 1.0, 0.0]
+color     = "#2ECC71"
+name      = "Fan Y"
+
+[[fans]]
+bounds    = [[-100.0, 100.0], [-100.0, 100.0], [-100.0, 100.0]]
+direction = [0.0, 0.0, 1.0]
+color     = "#3498DB"
+name      = "Fan Z"

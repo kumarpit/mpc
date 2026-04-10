@@ -1,0 +1,38 @@
+# Demo level — showcases the MPC solver navigating three sequential fan zones.
+#
+# The ball is thrown with zero initial Y velocity; in free flight it would
+# fall far short of the goal in Y and crash well below goal height.
+# The three fans are stacked along the Y axis so the solver must plan when to
+# use each zone to bend the trajectory toward the goal.
+
+[params]
+N         = 22
+H         = 11
+dt        = 0.10
+alpha_max = 80.0
+
+[start]
+r0     = [0.0, 0.0, 2.0]
+v0     = [2.0, 0.0, 4.0]
+r_goal = [5.0, 8.0, 1.5]
+
+# Zone 1 — early flight.  Ball enters here first; pushed hard +y and up.
+[[fans]]
+bounds    = [[-10.0, 10.0], [-10.0, 10.0], [-10.0, 10.0]]
+direction = [0.0, 1.0, 0.6]
+color     = "#2E86AB"
+name      = "Zone 1  (+y +z)"
+
+# Zone 2 — mid flight.  Continues y push; starts correcting z back down.
+[[fans]]
+bounds    = [[-20.0, 20.0], [-20.0, 20.0], [-20.0, 20.0]]
+direction = [0.1, 0.9, -0.2]
+color     = "#E8834C"
+name      = "Zone 2  (+y −z)"
+
+# Zone 3 — final approach.  Guides ball down to goal height.
+[[fans]]
+bounds    = [[-30.0, 30.0], [-30.0, 30.0], [-30.0, 30.0]]
+direction = [0.2, 0.5, -0.9]
+color     = "#27AE60"
+name      = "Zone 3  (−z)"
